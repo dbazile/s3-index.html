@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <style>
+        img {
+            max-width: 10em;
+        }
+    </style>
+</head>
+<body>
+<h1>Directory listing for <code class="current-dir">####</code></h1>
+<hr/>
+<ul></ul>
+<hr/>
+<script>
+    const BUCKET = 'https://s3.amazonaws.com/basement.andsoitcontinues.com/'
+    const PATTERN_IMAGE = /\.(svg|png|gif|jpe?g)$/i
+    const TYPE_FOLDER = 'folder'
+    const TYPE_FILE = 'file'
+    const ICON_IMAGE = 'icon-image.svg'
+    const ICON_FOLDER = 'icon-folder.svg'
+    const ICON_FILE = 'icon-file.svg'
+    const MAX_PREVIEW_SIZE = 512000
+
+    const __files__ = []
+
+    //
+    // Bootstrapping
+    //
+
+    initialize()
+
+    //
+    // Helpers
+    //
+
+    function atoa(arrayLike) {
+        return Array.prototype.slice.call(arrayLike)
+    }
+
+    function append(f) {
+        const li = document.createElement('li')
+        const anchor = document.createElement('a')
+        const figure = document.createElement('figure')
+        const figcaption = document.createElement('figcaption')
+        const icon = document.createElement('img')
+
+        console.debug('-> /%s', f.key)
+        if (f.type === TYPE_FOLDER) {
+            figcaption.textContent = f.basename
+            anchor.href = '#/' + f.key
+            icon.src = ICON_FOLDER
+        }
+        else {
+            figcaption.textContent = `${f.basename} (${Math.round(f.bytes/1024)}KB)`
+            anchor.href = BUCKET + f.key
+            anchor.target = '_blank'
+            if (PATTERN_IMAGE.test(f.basename)) {
+                icon.src = f.bytes < MAX_PREVIEW_SIZE ? anchor.href : ICON_IMAGE
+            }
+            else {
+                icon.src = ICON_FILE
+            }
+        }
+
+        figure.appendChild(icon)
+        figure.appendChild(figcaption)
+        anchor.appendChild(figure)
+        li.appendChild(anchor)
+        document.querySelector('ul').appendChild(li)
+    }
+
+    function basename(path) {
+        return path.split('/').filter(Boolean).pop()
+    }
+
+    function clear() {
+        const ul = document.querySelector('ul')
+        while (ul.firstChild) {
+            ul.removeChild(ul.firstChild)
+        }
+    }
+
+    function dirname(path) {
+        const segments = path.split('/').filter(Boolean)
+        segments.pop()
+        return segments.join('/')
+    }
+
+    function initialize() {
+        console.groupCollapsed('(initialize)')
+        console.debug('fetching file listing')
+        const xhr = new XMLHttpRequest()
+        xhr.onload = () => {
+            if (xhr.status !== 200) {
+                console.error('Request failed')
+                alert('OH NOES!')
+                return
+            }
+
+            console.debug('building manifest')
+            atoa(xhr.responseXML.querySelectorAll('Contents'))
+                .map(toDescriptor)
+                .forEach(d => {
+                    console.debug(JSON.stringify(d, null, 2))
+                    __files__.push(d)
+                })
+
+            // Initial render
+            render()
+
+            // Subscribe to future renders
+            window.onhashchange = () => {
+                clear()
+                render()
+            }
+
+            console.groupEnd()
+        }
+        xhr.open('GET', BUCKET + '?list-type=2&max-keys=5000')
+        xhr.send()
+    }
+
+    function render() {
+        const currentDir = location.hash.replace(/(^#\/?|\/?$)/g, '')
+        const parentDir = dirname(currentDir)
+
+        console.groupCollapsed('(render) directory `%s`', currentDir)
+        document.querySelector('.current-dir').textContent = currentDir ? `/${currentDir}/` : '/'
+
+        if (currentDir) {
+            append({
+                key: parentDir,
+                parent: parentDir,
+                basename: '..',
+                type: TYPE_FOLDER,
+                bytes: 0,
+            })
+        }
+
+        __files__
+            .filter(f => f.parent === currentDir)
+            .sort((a, b) => {
+                if (a.type !== b.type) {
+                    return a.type === TYPE_FOLDER ? -1 : 1
+                }
+                return a.basename - b.basename
+            })
+            .forEach(append)
+
+        console.groupEnd()
+    }
+
+    function toDescriptor(node) {
+        const key = node.querySelector('Key').textContent
+        return {
+            key:      key,
+            parent:   dirname(key),
+            basename: basename(key),
+            type:     key.substr(-1) === '/' ? TYPE_FOLDER : TYPE_FILE,
+            bytes:    parseInt(node.querySelector('Size').textContent, 10),
+        }
+    }
+</script>
+</body>
+</html>
