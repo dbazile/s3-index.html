@@ -135,21 +135,25 @@
 <script>
     'use strict'
 
-    const BASE_URL = '/'
-    const BUCKET = location.hostname
     const PATTERN_IMAGE = /\.(svg|png|gif|jpe?g)$/i
     const TYPE_DIRECTORY = 'directory'
     const TYPE_FILE = 'file'
     const KB = 1024
     const MB = 1024000
-    const PREVIEW_LIMIT = 500 * KB
 
-    const __manifest__ = []
+    //
+    // Configuration
+    //
+
+    const BASE_URL = '/'
+    const BUCKET = location.hostname
+    const PREVIEW_LIMIT = 500 * KB
 
     //
     // Bootstrapping
     //
 
+    const __manifest__ = []
     initialize()
 
     //

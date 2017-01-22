@@ -7,7 +7,19 @@
 
 ## How to use?
 
-Just drop `index.html` in the root of the bucket.  If you need to configure things, jump down to the top of the `script` tag.
+Just drop `index.html` in the root of the bucket.  If you need to configure things, jump down to the top of the `script` tag to this section:
+
+```
+
+    //
+    // Configuration
+    //
+
+    const BASE_URL = 'http://s3.amazonaws.com/my-bucket-name/'
+    const BUCKET = 'my-bucket-name'
+    const PREVIEW_LIMIT = 500 * KB
+
+```
 
 
 ## Disclaimers
