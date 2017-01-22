@@ -135,7 +135,8 @@
 <script>
     'use strict'
 
-    const BUCKET = '/'
+    const BASE_URL = '/'
+    const BUCKET = location.hostname
     const PATTERN_IMAGE = /\.(svg|png|gif|jpe?g)$/i
     const TYPE_FOLDER = 'folder'
     const TYPE_FILE = 'file'
@@ -176,7 +177,7 @@
         else {
             let filesize
             label.textContent = `${f.basename} (${calculateSize(f.bytes)})`
-            anchor.href = BUCKET + f.key
+            anchor.href = BASE_URL + f.key
             anchor.target = '_blank'
             if (PATTERN_IMAGE.test(f.basename)) {
                 icon = createIcon('image')
@@ -255,7 +256,7 @@
             // Subscribe to future renders
             window.onhashchange = render
         }
-        xhr.open('GET', 'https://s3.amazonaws.com/' + location.hostname + '?list-type=2&max-keys=5000')
+        xhr.open('GET', 'https://s3.amazonaws.com/' + BUCKET + '?list-type=2&max-keys=5000')
         xhr.send()
     }
 
