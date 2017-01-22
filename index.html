@@ -319,7 +319,7 @@
 
     function toDirectory(basename_, key) {
         return {
-            key: key + '/',
+            key: key ? key + '/' : '',
             parent: dirname(key),
             basename: basename_,
             type: TYPE_DIRECTORY,
