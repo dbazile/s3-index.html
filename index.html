@@ -274,6 +274,15 @@
                 })
             console.groupEnd()
 
+            // Sort once
+            __manifest__
+                .sort((a, b) => {
+                    if (a.type !== b.type) {
+                        return a.type === TYPE_DIRECTORY ? -1 : 1
+                    }
+                    return a.key < b.key ? -1 : 1
+                })
+
             // Initial render
             render()
 
@@ -299,12 +308,6 @@
 
         __manifest__
             .filter(f => f.parent === currentDir)
-            .sort((a, b) => {
-                if (a.type !== b.type) {
-                    return a.type === TYPE_FOLDER ? -1 : 1
-                }
-                return a.basename - b.basename
-            })
             .forEach(append)
 
         console.groupEnd()
