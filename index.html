@@ -255,7 +255,7 @@
             // Subscribe to future renders
             window.onhashchange = render
         }
-        xhr.open('GET', BUCKET + '?list-type=2&max-keys=5000')
+        xhr.open('GET', 'https://s3.amazonaws.com/' + location.hostname + '?list-type=2&max-keys=5000')
         xhr.send()
     }
 
