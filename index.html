@@ -144,7 +144,7 @@
     const MB = 1024000
     const PREVIEW_LIMIT = 500 * KB
 
-    const __files__ = []
+    const __manifest__ = []
 
     //
     // Bootstrapping
@@ -242,11 +242,35 @@
             }
 
             console.debug('building manifest')
+
+            // Add files
+            const directories = {}
             atoa(xhr.responseXML.querySelectorAll('Contents'))
-                .map(toDescriptor)
+                .filter(e => e.querySelector('Key').textContent.substr(-1) !== '/')
+                .map(toFile)
                 .forEach(d => {
                     console.debug(JSON.stringify(d, null, 2))
-                    __files__.push(d)
+                    directories[d.parent] = true
+                    __manifest__.push(d)
+                })
+
+            // Fabricate intermediary ancestors
+            Object.keys(directories)
+                .forEach(key => {
+                    const ancestors = key.split('/')
+                    while (ancestors.length) {
+                        ancestors.pop()
+                        directories[ancestors.join('/')] = true
+                    }
+                })
+
+            // Add directories
+            Object.keys(directories)
+                .filter(Boolean)
+                .forEach(key => {
+                    const d = toDirectory(basename(key), key)
+                    console.debug(JSON.stringify(d, null, 2))
+                    __manifest__.unshift(d)
                 })
             console.groupEnd()
 
@@ -262,24 +286,18 @@
 
     function render() {
         const currentDir = location.hash.replace(/(^#\/?|\/?$)/g, '')
-        const parentDir = dirname(currentDir)
 
         console.group('(render) directory `%s`', currentDir)
         document.querySelector('.current-dir').textContent = document.title = currentDir ? `/${currentDir}/` : '/'
 
         clear()
 
+        // Make link to parent directory
         if (currentDir) {
-            append({
-                key: parentDir,
-                parent: parentDir,
-                basename: '..',
-                type: TYPE_FOLDER,
-                bytes: 0,
-            })
+            append(toDirectory('..', dirname(currentDir)))
         }
 
-        __files__
+        __manifest__
             .filter(f => f.parent === currentDir)
             .sort((a, b) => {
                 if (a.type !== b.type) {
@@ -292,13 +310,22 @@
         console.groupEnd()
     }
 
-    function toDescriptor(node) {
+    function toDirectory(basename_, key) {
+        return {
+            key: key + '/',
+            parent: dirname(key),
+            basename: basename_,
+            type: TYPE_DIRECTORY,
+        }
+    }
+
+    function toFile(node) {
         const key = node.querySelector('Key').textContent
         return {
             key:      key,
             parent:   dirname(key),
             basename: basename(key),
-            type:     key.substr(-1) === '/' ? TYPE_FOLDER : TYPE_FILE,
+            type:     TYPE_FILE,
             bytes:    parseInt(node.querySelector('Size').textContent, 10),
         }
     }
