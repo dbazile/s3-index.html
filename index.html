@@ -127,7 +127,9 @@
     function initialize() {
         console.groupCollapsed('(initialize)')
         console.debug('fetching file listing')
+
         const xhr = new XMLHttpRequest()
+
         xhr.onreadystatechange = () => {
             if (xhr.readyState != 4) {
                 return
@@ -170,6 +172,7 @@
                     console.debug(JSON.stringify(d, null, 2))
                     __manifest__.unshift(d)
                 })
+
             console.groupEnd()
 
             // Sort once
@@ -261,15 +264,13 @@
         align-content: flex-start;
     }
     .placeholder {
-        text-align: center;
         position: absolute;
-        padding-top: 30vh;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        align-items: center;
-        justify-content: center;
+        padding-top: 30vh;
+        text-align: center;
         font-weight: 100;
         color: #ccc;
         animation: pulse infinite alternate 2s linear;
