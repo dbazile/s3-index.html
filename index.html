@@ -35,8 +35,8 @@
     // Configuration
     //
 
-    const BASE_URL = '/'
-    const BUCKET = location.hostname
+    const BUCKET_URL = 'https://<MY BUCKET NAME>.s3.amazonaws.com'
+    const CONTENT_BASE_URL = BUCKET_URL + '/'
     const PREVIEW_LIMIT = (parseInt(location.search.replace(/^\?preview_kb=(\d+)/g, '$1'), 10) || 500) * KB
 
     //
@@ -71,7 +71,7 @@
         else {
             let filesize
             label.textContent = `${f.basename} (${calculateSize(f.bytes)})`
-            anchor.href = BASE_URL + f.key
+            anchor.href = CONTENT_BASE_URL + f.key
             anchor.target = '_blank'
             if (PATTERN_IMAGE.test(f.basename)) {
                 icon = createIcon('image')
@@ -136,8 +136,13 @@
             }
 
             if (xhr.status !== 200) {
-                console.error('Request failed')
-                alert('OH NOES!')
+                console.error('Request failed', xhr)
+                console.groupEnd()
+
+                renderError(xhr.status === 0
+                    ? 'check the console? 🤯'
+                    : `S3 returned HTTP ${xhr.status}`
+                )
                 return
             }
 
@@ -190,8 +195,16 @@
             // Subscribe to future renders
             window.onhashchange = render
         }
-        xhr.open('GET', 'https://s3.amazonaws.com/' + BUCKET + '?list-type=2&max-keys=5000')
-        xhr.send()
+
+        try {
+            xhr.open('GET', BUCKET_URL + '/?list-type=2&max-keys=5000')
+            xhr.send()
+        }
+        catch (e) {
+            console.error(e)
+            console.groupEnd()
+            renderError(e)
+        }
     }
 
     function render() {
@@ -212,6 +225,17 @@
             .forEach(append)
 
         console.groupEnd()
+    }
+
+    function renderError(err) {
+        clear()
+
+        const element = document.createElement('div')
+        element.className = 'error'
+        element.textContent = `${err}`
+
+        document.querySelector('.current-dir').textContent = 'oh no'
+        document.querySelector('main').appendChild(element)
     }
 
     function toDirectory(basename_, key) {
@@ -277,6 +301,18 @@
     }
     .placeholder .emoji {
         font-size: 2em;
+    }
+    .error {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding-top: 30vh;
+        text-align: center;
+        background-color: hsl(340, 95%, 95%);
+        color: #f06;
+        font: 2em monospace;
     }
     @keyframes pulse {
         0%, 15% { color: #444; }
