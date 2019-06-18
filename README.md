@@ -5,9 +5,9 @@
 > Simple directory browser for an S3 bucket.
 
 
-## How to use?
+## Usage
 
-Just drop `index.html` in the root of the bucket.  If you need to configure things, jump down to the top of the `script` tag to this section:
+Edit this section of `index.html`, then just drop the file in the root of your bucket:
 
 ```
 
@@ -15,9 +15,9 @@ Just drop `index.html` in the root of the bucket.  If you need to configure thin
     // Configuration
     //
 
-    const BASE_URL = 'http://s3.amazonaws.com/my-bucket-name/'
-    const BUCKET = 'my-bucket-name'
-    const PREVIEW_LIMIT = 500 * KB
+    const BUCKET_URL = 'https://<MY BUCKET NAME>.s3.amazonaws.com'
+    const CONTENT_BASE_URL = BUCKET_URL + '/'
+    const PREVIEW_LIMIT = (parseInt(location.search.replace(/^\?preview_kb=(\d+)/g, '$1'), 10) || 500) * KB
 
 ```
 
@@ -28,6 +28,6 @@ Just drop `index.html` in the root of the bucket.  If you need to configure thin
 
 This thing does a massive one-time scrape of 5000 keys at load time.  If your bucket has all those things in a single folder...  Well, there's no pagination.
 
-### ES2015
+### ES2015+, Flexbox
 
 Life is too short to support ancient browsers for tiny side projects.
