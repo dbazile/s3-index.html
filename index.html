@@ -111,7 +111,7 @@
         if (f.preview) {
             const preview = document.createElement('div')
             preview.className = 'preview'
-            preview.style.backgroundImage = `url(${CONTENT_BASE_URL}${f.preview})`
+            preview.style.backgroundImage = `url('${CONTENT_BASE_URL}${f.preview}')`
             anchor.appendChild(preview)
         }
 
@@ -174,7 +174,7 @@
                 return
             }
 
-            console.debug('building manifest')
+            console.groupCollapsed('build manifest')
 
             // Add files
             const directories = {}
@@ -206,11 +206,13 @@
                     __manifest__.unshift(d)
                 })
 
+            console.groupEnd('build manifest')
+
             // Post-processing
             __manifest__
                 .forEach(f => {
-                    // Ignore hidden files
-                    if (f.hidden) {
+                    // Ignore hidden files and directories
+                    if (f.hidden || f.type === TYPE_DIRECTORY) {
                         return
                     }
 
@@ -228,16 +230,12 @@
                         return
                     }
 
-                    // Video previews
-                    if (PATTERN_VIDEO.test(f.basename)) {
-                        const pattern = f.key.replace(/\.\w+$/, '.THUMBNAIL')
-                        console.debug('find thumbnail:  %s', pattern)
+                    // Explicit thumbnails
+                    const pattern = f.key.replace(/\.\w+$/, '.THUMBNAIL')
+                    console.debug('find thumbnail:  %s', pattern)
 
-                        const thumbnail = __manifest__.find(e => e.key.startsWith(pattern))
-                        if (!thumbnail) {
-                            return
-                        }
-
+                    const thumbnail = __manifest__.find(e => e.key.startsWith(pattern))
+                    if (thumbnail) {
                         console.log('found thumbnail: %s', thumbnail.key)
                         thumbnail.hidden = true
                         f.preview = thumbnail.key
